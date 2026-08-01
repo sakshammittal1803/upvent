@@ -7,14 +7,15 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { ImapFlow } from 'imapflow';
 import { simpleParser } from 'mailparser';
-import admin from 'firebase-admin';
+import { initializeApp, getApps, cert } from 'firebase-admin/app';
+import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 
 // Initialize Firebase Admin SDK
 let db = null;
 try {
-    if (!admin.apps.length) {
-        admin.initializeApp({
-            credential: admin.credential.cert({
+    if (getApps().length === 0) {
+        initializeApp({
+            credential: cert({
                 projectId: process.env.FIREBASE_PROJECT_ID,
                 clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
                 // Some hosting providers escape newlines, others don't.
@@ -24,7 +25,7 @@ try {
             })
         });
     }
-    db = admin.firestore();
+    db = getFirestore();
     console.log("Firebase Admin initialized successfully.");
 } catch (error) {
     console.error('CRITICAL: Firebase Admin Initialization Error:', error.message);
@@ -111,8 +112,8 @@ app.post('/api/events', async (req, res) => {
     try {
         const eventRef = await db.collection('events').add({
             title, organizer, category, start_datetime, end_datetime, duration_hours, registration_deadline, mode, venue_address, meeting_link, registration_url, status, notes, tags: tags || [], metadata: metadata || {},
-            created_at: admin.firestore.FieldValue.serverTimestamp(),
-            updated_at: admin.firestore.FieldValue.serverTimestamp()
+            created_at: FieldValue.serverTimestamp(),
+            updated_at: FieldValue.serverTimestamp()
         });
         
         const eventId = eventRef.id;
@@ -146,7 +147,7 @@ app.put('/api/events/:id', async (req, res) => {
     try {
         await db.collection('events').doc(id).update({
             title, organizer, category, start_datetime, end_datetime, duration_hours, registration_deadline, mode, venue_address, meeting_link, registration_url, status, notes, tags: tags || [], metadata: metadata || {},
-            updated_at: admin.firestore.FieldValue.serverTimestamp()
+            updated_at: FieldValue.serverTimestamp()
         });
         res.json({ updated: 1 });
     } catch (err) {
@@ -185,7 +186,7 @@ app.post('/api/credentials', async (req, res) => {
         await db.collection('user_credentials').add({
             email, 
             app_password: appPassword,
-            updated_at: admin.firestore.FieldValue.serverTimestamp()
+            updated_at: FieldValue.serverTimestamp()
         });
         res.json({ success: true });
     } catch (err) {
@@ -210,7 +211,7 @@ app.post('/api/users/sync', async (req, res) => {
             await userRef.update({
                 display_name: display_name || doc.data().display_name,
                 photo_url: photo_url || doc.data().photo_url,
-                last_login: admin.firestore.FieldValue.serverTimestamp()
+                last_login: FieldValue.serverTimestamp()
             });
             res.json({ success: true, action: 'updated' });
         } else {
@@ -221,8 +222,8 @@ app.post('/api/users/sync', async (req, res) => {
                 provider: provider || 'firebase',
                 email_verified: email_verified ? 1 : 0,
                 status: 'active',
-                last_login: admin.firestore.FieldValue.serverTimestamp(),
-                created_at: admin.firestore.FieldValue.serverTimestamp()
+                last_login: FieldValue.serverTimestamp(),
+                created_at: FieldValue.serverTimestamp()
             });
             res.json({ success: true, action: 'created' });
         }
@@ -291,7 +292,7 @@ app.post('/api/sync/imap', async (req, res) => {
                         start_datetime: new Date().toISOString(),
                         mode: 'online',
                         status: 'Registered',
-                        created_at: admin.firestore.FieldValue.serverTimestamp()
+                        created_at: FieldValue.serverTimestamp()
                     });
                 }
             }
@@ -336,7 +337,7 @@ app.post('/api/sync/mock/:platform', async (req, res) => {
             start_datetime: pastDate1.toISOString(),
             mode: 'online',
             status: 'Registered',
-            created_at: admin.firestore.FieldValue.serverTimestamp()
+            created_at: FieldValue.serverTimestamp()
         },
         {
             title: `Historical ${platform} Event 2`,
@@ -346,7 +347,7 @@ app.post('/api/sync/mock/:platform', async (req, res) => {
             start_datetime: pastDate2.toISOString(),
             mode: 'offline',
             status: 'Registered',
-            created_at: admin.firestore.FieldValue.serverTimestamp()
+            created_at: FieldValue.serverTimestamp()
         }
     ];
 
