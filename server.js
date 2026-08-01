@@ -19,10 +19,15 @@ try {
             credential: cert({
                 projectId: process.env.FIREBASE_PROJECT_ID,
                 clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-                // Some hosting providers escape newlines, others don't.
-                privateKey: process.env.FIREBASE_PRIVATE_KEY 
-                    ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n').replace(/"/g, '')
-                    : undefined,
+                privateKey: (function() {
+                    let pk = process.env.FIREBASE_PRIVATE_KEY;
+                    if (!pk) return undefined;
+                    pk = pk.replace(/\\+n/g, '\n').replace(/["']/g, '').trim();
+                    if (!pk.includes('\n') && pk.includes('-----BEGIN PRIVATE KEY-----')) {
+                        pk = pk.replace(/ /g, '\n').replace('-----BEGIN\nPRIVATE\nKEY-----', '-----BEGIN PRIVATE KEY-----').replace('-----END\nPRIVATE\nKEY-----', '-----END PRIVATE KEY-----');
+                    }
+                    return pk;
+                })(),
             })
         });
     }
