@@ -20,6 +20,9 @@ try {
                 projectId: process.env.FIREBASE_PROJECT_ID,
                 clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
                 privateKey: (function() {
+                    if (process.env.FIREBASE_SERVICE_ACCOUNT_BASE64) {
+                        return Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT_BASE64, 'base64').toString('utf8');
+                    }
                     let pk = process.env.FIREBASE_PRIVATE_KEY;
                     if (!pk) return undefined;
                     pk = pk.replace(/\\+n/g, '\n').replace(/["']/g, '').trim();
