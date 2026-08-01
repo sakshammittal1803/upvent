@@ -10,22 +10,25 @@ import { simpleParser } from 'mailparser';
 import admin from 'firebase-admin';
 
 // Initialize Firebase Admin SDK
-if (!admin.apps.length) {
-    try {
+let db = null;
+try {
+    if (!admin.apps.length) {
         admin.initializeApp({
             credential: admin.credential.cert({
                 projectId: process.env.FIREBASE_PROJECT_ID,
                 clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-                // Handle escaped newlines from environment variables
-                privateKey: process.env.FIREBASE_PRIVATE_KEY ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n') : undefined,
+                // Some hosting providers escape newlines, others don't.
+                privateKey: process.env.FIREBASE_PRIVATE_KEY 
+                    ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n').replace(/"/g, '')
+                    : undefined,
             })
         });
-        console.log("Firebase Admin initialized successfully.");
-    } catch (error) {
-        console.error('Firebase Admin Initialization Error:', error);
     }
+    db = admin.firestore();
+    console.log("Firebase Admin initialized successfully.");
+} catch (error) {
+    console.error('CRITICAL: Firebase Admin Initialization Error:', error.message);
 }
-const db = admin.firestore();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
