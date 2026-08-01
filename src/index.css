@@ -1,0 +1,25 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body { 
+    @apply font-sans text-on-background dark:text-[#e1e3e4] min-h-screen flex flex-col bg-background dark:bg-[#121212];
+  }
+}
+
+@layer utilities {
+  .gradient-btn { 
+    background: linear-gradient(180deg, #3525cd 0%, #712ae2 100%); 
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
