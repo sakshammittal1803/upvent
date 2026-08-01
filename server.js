@@ -12,6 +12,7 @@ import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 
 // Initialize Firebase Admin SDK
 let db = null;
+let dbInitError = null;
 try {
     if (getApps().length === 0) {
         initializeApp({
@@ -28,6 +29,7 @@ try {
     db = getFirestore();
     console.log("Firebase Admin initialized successfully.");
 } catch (error) {
+    dbInitError = error.message;
     console.error('CRITICAL: Firebase Admin Initialization Error:', error.message);
 }
 
@@ -66,6 +68,16 @@ app.use('/api/', apiLimiter);
 // ---------------------------------------------------------
 // API ROUTES (Firebase Firestore)
 // ---------------------------------------------------------
+
+// Database Check Middleware
+app.use('/api', (req, res, next) => {
+    if (!db) {
+        return res.status(500).json({ 
+            error: `Firebase Admin Init Error: ${dbInitError}. Please check Vercel Environment Variables.` 
+        });
+    }
+    next();
+});
 
 // Get all events
 app.get('/api/events', async (req, res) => {
